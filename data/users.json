@@ -1,0 +1,26 @@
+[
+    {
+        "id": "60f1a74be8c84",
+        "username": "admin",
+        "password": "$2y$10$8tUAN0Y7NqijIKIAXpVxDOHZvxBZ.VzL9c9dGU9RCa0EoNwKD1Xz.",
+        "name": "Sonali",
+        "role": "admin",
+        "last_login": "2025-05-19 04:16:41"
+    },
+    {
+        "id": "60f1a75ce8c85",
+        "username": "cashier",
+        "password": "$2y$10$2qn5gk25KqeyO1tYXEW3xuomcYefnFNdxoXT.wggk7HdQt3zLgr3q",
+        "name": "Siriya Latha",
+        "role": "cashier",
+        "last_login": "2025-05-19 04:08:38"
+    },
+    {
+        "id": "60f1a76de8c86",
+        "username": "kitchen",
+        "password": "$2y$10$eGoBvk48dR1xphQio6kCKOCNa9L3WOnXvwSFfwgvkMuBDW6Sh4mYi",
+        "name": "Chef Mike",
+        "role": "kitchen",
+        "last_login": "2025-05-18 19:21:23"
+    }
+]

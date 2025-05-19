@@ -1,0 +1,62 @@
+[
+    {
+        "id": "60f1a6a1e8c7a",
+        "name": "Table 1",
+        "capacity": 4,
+        "status": "available"
+    },
+    {
+        "id": "60f1a6b2e8c7b",
+        "name": "Table 2",
+        "capacity": 2,
+        "status": "available"
+    },
+    {
+        "id": "60f1a6c3e8c7c",
+        "name": "Table 3",
+        "capacity": 6,
+        "status": "available"
+    },
+    {
+        "id": "60f1a6d4e8c7d",
+        "name": "Table 4",
+        "capacity": 4,
+        "status": "available"
+    },
+    {
+        "id": "60f1a6e5e8c7e",
+        "name": "Table 5",
+        "capacity": 8,
+        "status": "available"
+    },
+    {
+        "id": "60f1a6f6e8c7f",
+        "name": "Table 6",
+        "capacity": 2,
+        "status": "available"
+    },
+    {
+        "id": "60f1a707e8c80",
+        "name": "Table 7",
+        "capacity": 4,
+        "status": "available"
+    },
+    {
+        "id": "60f1a718e8c81",
+        "name": "Table 8",
+        "capacity": 6,
+        "status": "available"
+    },
+    {
+        "id": "60f1a729e8c82",
+        "name": "Table 9",
+        "capacity": 4,
+        "status": "available"
+    },
+    {
+        "id": "60f1a73ae8c83",
+        "name": "Table 10",
+        "capacity": 2,
+        "status": "available"
+    }
+]

@@ -1,0 +1,122 @@
+[
+    {
+        "id": "60f1a5d5e8c81",
+        "name": "French Fries",
+        "description": "Crispy golden fries served with ketchup",
+        "price": 3.99,
+        "category": "appetizer",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a608e8c84",
+        "name": "Mozzarella Sticks",
+        "description": "Breaded mozzarella sticks served with marinara sauce",
+        "price": 6.99,
+        "category": "appetizer",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a5f7e8c83",
+        "name": "Iced Tea",
+        "description": "Refreshing iced tea with lemon",
+        "price": 2.49,
+        "category": "beverage",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a63be8c87",
+        "name": "Lemonade",
+        "description": "Freshly squeezed lemonade with mint",
+        "price": 2.99,
+        "category": "beverage",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a5e6e8c82",
+        "name": "Chocolate Cake",
+        "description": "Rich chocolate cake with a layer of ganache",
+        "price": 5.99,
+        "category": "dessert",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a62ae8c86",
+        "name": "Cheesecake",
+        "description": "Creamy New York style cheesecake with berry compote",
+        "price": 6.99,
+        "category": "dessert",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a5b3e8c7f",
+        "name": "Classic Burger",
+        "description": "Juicy beef patty with lettuce, tomato, and special sauce",
+        "price": 9.99,
+        "category": "main",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a5c4e8c80",
+        "name": "Chicken Caesar Salad",
+        "description": "Fresh romaine lettuce with grilled chicken, croutons, and Caesar dressing",
+        "price": 8.99,
+        "category": "main",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a619e8c85",
+        "name": "Veggie Pasta",
+        "description": "Pasta with seasonal vegetables in a light cream sauce",
+        "price": 10.99,
+        "category": "main",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "60f1a64ce8c88",
+        "name": "Grilled Salmon",
+        "description": "Grilled salmon fillet with lemon butter sauce and seasonal vegetables",
+        "price": 14.99,
+        "category": "main",
+        "available": true,
+        "image": ""
+    },
+    {
+        "id": "f1h4s",
+        "name": "\u0dbb\u0ddd\u0dc3\u0dca \u0db4\u0dcf\u0db1\u0dca",
+        "code": "DES003",
+        "category": "dessert",
+        "description": "",
+        "price": 100,
+        "stock": 50,
+        "available": true
+    },
+    {
+        "id": "2koc5",
+        "name": "\u0db4\u0dcf\u0db1\u0dca",
+        "code": "MAI005",
+        "category": "main",
+        "description": "",
+        "price": 300,
+        "stock": 50,
+        "available": true
+    },
+    {
+        "id": "sw77a",
+        "name": "\u0db4\u0dcf\u0db1\u0dca",
+        "code": "BAC001",
+        "category": "Backery Items",
+        "description": "",
+        "price": 100,
+        "stock": 50,
+        "available": true
+    }
+]
