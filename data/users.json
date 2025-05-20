@@ -2,18 +2,18 @@
     {
         "id": "60f1a74be8c84",
         "username": "admin",
-        "password": "$2y$10$8tUAN0Y7NqijIKIAXpVxDOHZvxBZ.VzL9c9dGU9RCa0EoNwKD1Xz.",
+        "password": "$2y$10$g\/jy9G0HsyxxzVar9PI0k.j3hDNKOlFb8rT5EA3QgOiarI0dvj5Ou",
         "name": "Sonali",
         "role": "admin",
-        "last_login": "2025-05-19 04:16:41"
+        "last_login": "2025-05-20 04:24:05"
     },
     {
         "id": "60f1a75ce8c85",
         "username": "cashier",
-        "password": "$2y$10$2qn5gk25KqeyO1tYXEW3xuomcYefnFNdxoXT.wggk7HdQt3zLgr3q",
+        "password": "$2y$10$kWM8FQ4NZYVAPiG1cemHd.KM0CGC9xH.LwXQJu2Zd7SkV.uCsoNX.",
         "name": "Siriya Latha",
         "role": "cashier",
-        "last_login": "2025-05-19 04:08:38"
+        "last_login": "2025-05-20 08:22:57"
     },
     {
         "id": "60f1a76de8c86",

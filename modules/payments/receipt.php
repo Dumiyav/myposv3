@@ -29,49 +29,67 @@ if (!$order) {
     die('Order not found');
 }
 
-// Get table details
-$tables = readJsonFile('tables.json');
+// Get table details (if applicable, check if table_id exists)
 $table = null;
-
-foreach ($tables as $t) {
-    if ($t['id'] === $order['table_id']) {
-        $table = $t;
-        break;
-    }
-}
-
-// Get menu items
-$menuItems = readJsonFile('menu.json');
-$orderItemsDetails = [];
-
-foreach ($order['items'] as $item) {
-    $menuItem = null;
-    foreach ($menuItems as $mi) {
-        if ($mi['id'] === $item['menu_item_id']) {
-            $menuItem = $mi;
+if (isset($order['table_id']) && !empty($order['table_id'])) {
+    $tables = readJsonFile('tables.json');
+    foreach ($tables as $t) {
+        if ($t['id'] === $order['table_id']) {
+            $table = $t;
             break;
         }
     }
-    
-    if ($menuItem) {
-        $orderItemsDetails[] = [
-            'name' => $menuItem['name'],
-            'price' => $menuItem['price'],
-            'quantity' => $item['quantity'],
-            'total' => $menuItem['price'] * $item['quantity']
-        ];
+}
+
+
+// Get menu items for regular item lookup
+$menuItemsAll = readJsonFile('menu.json'); // Renamed to avoid conflict
+$orderItemsDetails = [];
+$subtotal = 0; // Initialize subtotal for items listed on receipt
+
+foreach ($order['items'] as $item_in_order) {
+    $item_detail_for_receipt = [
+        'name' => 'Unknown Item',
+        'price' => 0,
+        'quantity' => $item_in_order['quantity'] ?? 0,
+        'total' => 0,
+        'is_custom' => false
+    ];
+
+    if (isset($item_in_order['is_custom']) && $item_in_order['is_custom'] === true) {
+        // This is a custom item
+        $item_detail_for_receipt['name'] = $item_in_order['custom_name'] ?? 'Custom Item';
+        $item_detail_for_receipt['price'] = $item_in_order['custom_price'] ?? 0;
+        $item_detail_for_receipt['is_custom'] = true;
+    } else if (isset($item_in_order['menu_item_id'])) {
+        // This is a regular menu item
+        $menuItemFound = false;
+        foreach ($menuItemsAll as $mi) {
+            if ($mi['id'] === $item_in_order['menu_item_id']) {
+                $item_detail_for_receipt['name'] = $mi['name'];
+                $item_detail_for_receipt['price'] = $mi['price'];
+                $menuItemFound = true;
+                break;
+            }
+        }
+        if (!$menuItemFound) {
+            $item_detail_for_receipt['name'] = 'Menu Item Not Found (' . htmlspecialchars($item_in_order['menu_item_id']) . ')';
+            // Price remains 0 to avoid incorrect calculations if item is missing
+            error_log("Receipt: Menu item ID {$item_in_order['menu_item_id']} not found in menu.json for order ID {$order['id']}");
+        }
+    } else {
+        error_log("Receipt: Invalid item structure in order ID {$order['id']}: " . print_r($item_in_order, true));
     }
+    
+    $item_detail_for_receipt['total'] = $item_detail_for_receipt['price'] * $item_detail_for_receipt['quantity'];
+    $subtotal += $item_detail_for_receipt['total'];
+    $orderItemsDetails[] = $item_detail_for_receipt;
 }
 
-// Calculate totals
-$subtotal = 0;
-foreach ($orderItemsDetails as $item) {
-    $subtotal += $item['total'];
-}
-
+// Use stored totals from the order for discount, tax, and final total
 $discount = $order['discount'] ?? 0;
-$tax = $order['tax'] ?? ($subtotal * TAX_RATE / 100);
-$total = $subtotal - $discount + $tax;
+$tax = $order['tax'] ?? 0;
+$finalTotal = $order['total'] ?? 0; // This is the authoritative total
 
 // Clear any previous output
 while (ob_get_level()) {
@@ -85,7 +103,7 @@ while (ob_get_level()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt #<?php echo $orderId; ?></title>
+    <title>Receipt #<?php echo htmlspecialchars($orderId); ?></title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -95,7 +113,8 @@ while (ob_get_level()) {
             line-height: 1.4;
         }
         .receipt {
-            max-width: 400px;
+            max-width: 400px; /* Standard receipt width */
+            min-width: 300px; /* Minimum width */
             margin: 0 auto;
             border: 1px solid #ddd;
             padding: 20px;
@@ -125,12 +144,16 @@ while (ob_get_level()) {
             margin-bottom: 20px;
         }
         th, td {
-            padding: 8px;
+            padding: 6px 4px; /* Reduced padding */
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #eee; /* Lighter border */
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #f9f9f9; /* Lighter background */
+            font-size: 11px; /* Smaller font for headers */
+        }
+        td {
+            font-size: 11px; /* Smaller font for data */
         }
         .text-right {
             text-align: right;
@@ -142,11 +165,14 @@ while (ob_get_level()) {
             display: flex;
             justify-content: space-between;
             margin-bottom: 5px;
+             font-size: 11px;
         }
         .total-row.final {
             font-weight: bold;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #ccc; /* Slightly darker border for final total */
             padding-top: 5px;
+            margin-top: 5px;
+            font-size: 12px;
         }
         .footer {
             text-align: center;
@@ -172,37 +198,52 @@ while (ob_get_level()) {
             }
             body {
                 padding: 0;
+                font-size: 10pt; /* Adjust base font size for printing */
             }
             .receipt {
                 border: none;
                 max-width: 100%;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
             }
+             th, td {
+                padding: 4px 2px; /* Further reduce padding for print */
+                font-size: 9pt;
+            }
+            .header h1 { font-size: 14pt; }
+            .header p { font-size: 9pt; margin: 2px 0; }
+            .info-row, .total-row { font-size: 9pt; margin-bottom: 3px; }
+            .total-row.final { font-size: 10pt; }
+
         }
     </style>
 </head>
 <body>
     <div class="receipt">
         <div class="header">
-            <h1><?php echo APP_NAME; ?></h1>
+            <h1><?php echo htmlspecialchars(APP_NAME); ?></h1>
             <p>Receipt</p>
         </div>
         
         <div class="info">
             <div class="info-row">
                 <span>Order #:</span>
-                <span><?php echo $orderId; ?></span>
+                <span><?php echo htmlspecialchars($orderId); ?></span>
             </div>
             <div class="info-row">
                 <span>Date:</span>
-                <span><?php echo $order['created_at']; ?></span>
+                <span><?php echo htmlspecialchars($order['created_at']); ?></span>
             </div>
+            <?php if ($table): ?>
             <div class="info-row">
                 <span>Table:</span>
-                <span><?php echo $table ? $table['name'] : 'Unknown'; ?></span>
+                <span><?php echo htmlspecialchars($table['name']); ?></span>
             </div>
+            <?php endif; ?>
             <div class="info-row">
                 <span>Status:</span>
-                <span><?php echo ucfirst($order['status']); ?></span>
+                <span><?php echo ucfirst(htmlspecialchars($order['status'])); ?></span>
             </div>
         </div>
         
@@ -216,12 +257,17 @@ while (ob_get_level()) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($orderItemsDetails as $item): ?>
+                <?php foreach ($orderItemsDetails as $item_display): ?>
                 <tr>
-                    <td><?php echo $item['name']; ?></td>
-                    <td class="text-right"><?php echo formatCurrency($item['price']); ?></td>
-                    <td class="text-right"><?php echo $item['quantity']; ?></td>
-                    <td class="text-right"><?php echo formatCurrency($item['total']); ?></td>
+                    <td>
+                        <?php echo htmlspecialchars($item_display['name']); ?>
+                        <?php if ($item_display['is_custom']): ?>
+                            <span style="font-size: 0.8em; color: #555;">(Custom)</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="text-right"><?php echo formatCurrency($item_display['price']); ?></td>
+                    <td class="text-right"><?php echo $item_display['quantity']; ?></td>
+                    <td class="text-right"><?php echo formatCurrency($item_display['total']); ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -230,35 +276,35 @@ while (ob_get_level()) {
         <div class="totals">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span><?php echo formatCurrency($subtotal); ?></span>
+                <span><?php echo formatCurrency($subtotal); // Display sum of items ?></span>
             </div>
             
             <?php if ($discount > 0): ?>
             <div class="total-row">
                 <span>Discount:</span>
-                <span><?php echo formatCurrency($discount); ?></span>
+                <span style="color: red;">-<?php echo formatCurrency($discount); ?></span>
             </div>
             <?php endif; ?>
             
             <div class="total-row">
-                <span>Tax (<?php echo TAX_RATE; ?>%):</span>
+                <span>Tax (<?php echo htmlspecialchars(TAX_RATE); ?>%):</span>
                 <span><?php echo formatCurrency($tax); ?></span>
             </div>
             
             <div class="total-row final">
                 <span>Total:</span>
-                <span><?php echo formatCurrency($total); ?></span>
+                <span><?php echo formatCurrency($finalTotal); // Display stored final total ?></span>
             </div>
         </div>
         
-        <div class="payment-info">
+        <div class="payment-info" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
             <div class="info-row">
                 <span>Payment Method:</span>
-                <span><?php echo $order['payment_method'] ? ucfirst($order['payment_method']) : 'Pending'; ?></span>
+                <span><?php echo $order['payment_method'] ? ucfirst(htmlspecialchars($order['payment_method'])) : 'Pending'; ?></span>
             </div>
             <div class="info-row">
                 <span>Payment Status:</span>
-                <span><?php echo ucfirst($order['payment_status']); ?></span>
+                <span><?php echo ucfirst(htmlspecialchars($order['payment_status'])); ?></span>
             </div>
         </div>
         
@@ -273,11 +319,10 @@ while (ob_get_level()) {
     </div>
     
     <script>
-        // Auto-print when the page loads
-        window.onload = function() {
-            // Uncomment the line below to automatically open the print dialog
-            // window.print();
-        }
+        // Optional: Auto-print when the page loads, consider user experience.
+        // window.onload = function() {
+        //     window.print();
+        // }
     </script>
 </body>
 </html>

@@ -41,27 +41,48 @@ $totalTables = count($tables);
 $availableTables = 0;
 $occupiedTables = 0;
 
-foreach ($tables as $table) {
-    if ($table['status'] === 'available') {
-        $availableTables++;
-    } else {
-        $occupiedTables++;
+if (is_array($tables)) { // Ensure $tables is an array
+    foreach ($tables as $table) {
+        if (isset($table['status'])) { // Ensure 'status' key exists
+            if ($table['status'] === 'available') {
+                $availableTables++;
+            } else {
+                $occupiedTables++;
+            }
+        }
     }
 }
+
 
 // Get popular menu items
 $menuItemCounts = [];
 foreach ($orders as $order) {
-    if ($order['status'] === 'completed') {
+    if ($order['status'] === 'completed' && isset($order['items']) && is_array($order['items'])) {
         foreach ($order['items'] as $item) {
-            $menuItemId = $item['menu_item_id'];
-            $quantity = $item['quantity'];
-            
-            if (!isset($menuItemCounts[$menuItemId])) {
-                $menuItemCounts[$menuItemId] = 0;
+            // MODIFICATION START: Check if it's a regular item with menu_item_id
+            if (isset($item['is_custom']) && $item['is_custom'] === true) {
+                // It's a custom item, skip for popular menu item count for now
+                // Or, you could count them by custom_name if desired:
+                // $itemName = $item['custom_name'] ?? 'Unknown Custom Item';
+                // if (!isset($menuItemCounts[$itemName])) {
+                //     $menuItemCounts[$itemName] = 0;
+                // }
+                // $menuItemCounts[$itemName] += ($item['quantity'] ?? 0);
+                continue;
             }
             
-            $menuItemCounts[$menuItemId] += $quantity;
+            // Proceed only if menu_item_id exists (it's a regular item)
+            if (isset($item['menu_item_id'])) {
+                $menuItemId = $item['menu_item_id'];
+                $quantity = $item['quantity'] ?? 0; // Ensure quantity is set
+                
+                if (!isset($menuItemCounts[$menuItemId])) {
+                    $menuItemCounts[$menuItemId] = 0;
+                }
+                
+                $menuItemCounts[$menuItemId] += $quantity;
+            }
+            // MODIFICATION END
         }
     }
 }
@@ -72,41 +93,55 @@ arsort($menuItemCounts);
 // Get top 5 popular items
 $popularItems = [];
 $count = 0;
-foreach ($menuItemCounts as $menuItemId => $quantity) {
-    foreach ($menuItems as $menuItem) {
-        if ($menuItem['id'] === $menuItemId) {
-            $popularItems[] = [
-                'id' => $menuItemId,
-                'name' => $menuItem['name'],
-                'quantity' => $quantity
-            ];
-            break;
+if (is_array($menuItems)) { // Ensure $menuItems is an array
+    foreach ($menuItemCounts as $menuItemId => $quantity) {
+        $itemFound = false;
+        foreach ($menuItems as $menuItem) {
+            if (isset($menuItem['id']) && $menuItem['id'] === $menuItemId) { // Ensure 'id' key exists in menuItem
+                $popularItems[] = [
+                    'id' => $menuItemId,
+                    'name' => $menuItem['name'] ?? 'Unnamed Item', // Fallback for name
+                    'quantity' => $quantity
+                ];
+                $itemFound = true;
+                break;
+            }
+        }
+        // If a menu_item_id was counted but not found in menu.json (e.g. deleted item), 
+        // it won't be added to $popularItems, which is fine.
+        
+        if ($itemFound) {
+            $count++;
+            if ($count >= 5) {
+                break;
+            }
         }
     }
-    
-    $count++;
-    if ($count >= 5) {
-        break;
-    }
 }
+
 
 // Get recent orders (last 5)
 $recentOrders = [];
 $sortedOrders = $orders;
 
 // Sort orders by created_at (newest first)
-usort($sortedOrders, function($a, $b) {
-    return strtotime($b['created_at']) - strtotime($a['created_at']);
-});
+if (is_array($sortedOrders)) {
+    usort($sortedOrders, function($a, $b) {
+        // Ensure 'created_at' exists and is valid before using strtotime
+        $timeA = isset($a['created_at']) ? strtotime($a['created_at']) : 0;
+        $timeB = isset($b['created_at']) ? strtotime($b['created_at']) : 0;
+        return $timeB - $timeA;
+    });
+     // Get the 5 most recent orders
+    $recentOrders = array_slice($sortedOrders, 0, 5);
+}
 
-// Get the 5 most recent orders
-$recentOrders = array_slice($sortedOrders, 0, 5);
+
 ?>
 
 <div class="container mx-auto">
     <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
     
-    <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center">
@@ -183,9 +218,7 @@ $recentOrders = array_slice($sortedOrders, 0, 5);
         </div>
     </div>
     
-    <!-- Recent Orders and Popular Items -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Orders -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-lg font-semibold mb-4">Recent Orders</h2>
             
@@ -206,20 +239,19 @@ $recentOrders = array_slice($sortedOrders, 0, 5);
                         <?php foreach ($recentOrders as $order): ?>
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-2">
-                                <a href="index.php?page=orders&id=<?php echo $order['id']; ?>" class="text-blue-500 hover:text-blue-700 font-medium">
-                                    #<?php echo $order['id']; ?>
+                                <a href="index.php?page=orders&id=<?php echo htmlspecialchars($order['id']); ?>" class="text-blue-500 hover:text-blue-700 font-medium">
+                                    #<?php echo htmlspecialchars($order['id']); ?>
                                 </a>
                             </td>
                             
-                            </td>
-                            <td class="px-4 py-2 text-right"><?php echo formatCurrency($order['total']); ?></td>
+                            <td class="px-4 py-2 text-right"><?php echo formatCurrency($order['total'] ?? 0); ?></td>
                             <td class="px-4 py-2 text-center">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium <?php echo getStatusClass($order['status']); ?>">
-                                    <?php echo ucfirst($order['status']); ?>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium <?php echo getStatusClass($order['status'] ?? 'unknown'); ?>">
+                                    <?php echo ucfirst(htmlspecialchars($order['status'] ?? 'Unknown')); ?>
                                 </span>
                             </td>
                             <td class="px-4 py-2 text-right">
-                                <?php echo formatDate($order['created_at']); ?>
+                                <?php echo formatDate($order['created_at'] ?? ''); ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -233,29 +265,33 @@ $recentOrders = array_slice($sortedOrders, 0, 5);
             <?php endif; ?>
         </div>
         
-        <!-- Popular Items -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-lg font-semibold mb-4">Popular Items</h2>
             
             <?php if (empty($popularItems)): ?>
-            <p class="text-gray-500">No data available.</p>
+            <p class="text-gray-500">No data available for popular items (only counts regular menu items).</p>
             <?php else: ?>
             <div class="space-y-4">
-                <?php foreach ($popularItems as $item): ?>
+                <?php 
+                $maxQuantity = 0;
+                if (!empty($popularItems) && isset($popularItems[0]['quantity'])) {
+                    $maxQuantity = $popularItems[0]['quantity'];
+                }
+                if ($maxQuantity == 0) $maxQuantity = 1; // Avoid division by zero if all quantities are 0
+                
+                foreach ($popularItems as $item): ?>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                            <span class="text-gray-600 font-medium"><?php echo $item['quantity']; ?></span>
+                            <span class="text-gray-600 font-medium"><?php echo htmlspecialchars($item['quantity']); ?></span>
                         </div>
                         <div>
-                            <h3 class="font-medium"><?php echo $item['name']; ?></h3>
-                            <p class="text-sm text-gray-500"><?php echo $item['quantity']; ?> orders</p>
+                            <h3 class="font-medium"><?php echo htmlspecialchars($item['name']); ?></h3>
+                            <p class="text-sm text-gray-500"><?php echo htmlspecialchars($item['quantity']); ?> sold</p>
                         </div>
                     </div>
                     <div class="w-24 bg-gray-200 rounded-full h-2.5">
                         <?php
-                        // Calculate percentage based on highest quantity
-                        $maxQuantity = $popularItems[0]['quantity'];
                         $percentage = ($item['quantity'] / $maxQuantity) * 100;
                         ?>
                         <div class="bg-blue-600 h-2.5 rounded-full" style="width: <?php echo $percentage; ?>%"></div>
